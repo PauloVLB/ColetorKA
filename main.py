@@ -1,0 +1,3 @@
+from interface import exibir_janela_principal
+
+exibir_janela_principal()
