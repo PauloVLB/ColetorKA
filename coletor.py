@@ -1,6 +1,7 @@
-from tkinter import *
+from tkinter import Listbox, Scrollbar, Frame, messagebox, Tk, Button
 from turtle import right
 from leitor import Leitor
+from pathlib import Path
 import pandas as pd
 
 class Coletor:
@@ -10,11 +11,10 @@ class Coletor:
     planilha_KA_raw = None
     ja_carreguei_planilha_KA = False
 
-    dicionario_alunos = None
+    dicionario_alunos = {}
 
     todas_recomendacoes = []
     recomendacoes_selecionadas = []
-
 
     @staticmethod
     def coletar_dados():
@@ -23,9 +23,9 @@ class Coletor:
             Coletor.planilha_alunos_raw = pd.read_csv(Leitor.caminho_planilha_alunos,
                                                     dtype={'Id':str})
             Coletor.ja_carreguei_planilha_alunos = True
-        else:
-            print("Não selecionou planilha de alunos")
-            return
+        #else:
+        #    print("Não selecionou planilha de alunos")
+        #    return
 
         # Carrega planilha da Khan Academy 
         if len(Leitor.caminho_planilha_KA) > 2:
@@ -35,11 +35,11 @@ class Coletor:
                 Coletor.recomendacoes_selecionadas = Coletor.todas_recomendacoes
                 Coletor.ja_carreguei_planilha_KA = True
         else:
-            print("Não selecionou planilha KA")
+            Coletor.mostrar_mensagem("Você precisa selecionar a planilha da Khan Academy antes")
             return
         # Lê os alunos da planilha de alunos
         Coletor.definir_alunos()
-        Coletor.definir_recomendacoes_aluno()
+        Coletor.coletar_dados_finais()
 
     @staticmethod
     def definir_recomendacoes(janela_recomendacoes, lista_recomendacoes):
@@ -50,10 +50,14 @@ class Coletor:
         
         janela_recomendacoes.destroy()
 
+    @staticmethod 
+    def mostrar_mensagem(mensagem):
+        messagebox.showinfo(title="Aviso", message=mensagem)
+
     @staticmethod
     def selecionar_recomendacoes():
         if len(Leitor.caminho_planilha_KA) <= 2:
-            print("Não selecionou planilha KA")
+            Coletor.mostrar_mensagem("Você precisa selecionar a planilha da Khan Academy antes")
             return
 
         Coletor.planilha_KA_raw = pd.read_csv(Leitor.caminho_planilha_KA)
@@ -65,26 +69,26 @@ class Coletor:
         janela_recomendacoes.geometry('450x300')
 
         selecao = Frame(janela_recomendacoes)
-        barra_rolagem = Scrollbar(selecao, orient=VERTICAL)
-        lista_recomendacoes = Listbox(selecao, selectmode=EXTENDED, yscrollcommand=barra_rolagem.set,
+        barra_rolagem = Scrollbar(selecao, orient="vertical")
+        lista_recomendacoes = Listbox(selecao, selectmode="extended", yscrollcommand=barra_rolagem.set,
                                       width="400", height="15")
 
         barra_rolagem.config(command=lista_recomendacoes.yview)
 
         selecao.pack()
-        barra_rolagem.pack(side=RIGHT, fill=Y)
+        barra_rolagem.pack(side="right", fill="y")
         lista_recomendacoes.pack(expand = True, fill = "both")
 
         botao_selecionar = Button(janela_recomendacoes,    
                                   text='Selecionar',
                                   command= lambda : Coletor.definir_recomendacoes(janela_recomendacoes,
                                                                                   lista_recomendacoes))
-        botao_selecionar.pack(side=BOTTOM)
+        botao_selecionar.pack(side="bottom")
 
         recomendacoes = Coletor.todas_recomendacoes
         
         for each_item in range(len(recomendacoes)):
-            lista_recomendacoes.insert(END, recomendacoes[each_item])
+            lista_recomendacoes.insert("end", recomendacoes[each_item])
             
             # coloring alternative lines of listbox
             lista_recomendacoes.itemconfig(each_item,
@@ -96,12 +100,19 @@ class Coletor:
     @staticmethod
     def definir_alunos():
         # Cria dicionário que mapeia id -> nome do aluno
-        Coletor.dicionario_alunos = Coletor.planilha_alunos_raw.set_index('Id').to_dict()['Nome']
-
-        #print(Coletor.dicionario_alunos)
+        if Coletor.ja_carreguei_planilha_alunos:
+            Coletor.dicionario_alunos = Coletor.planilha_alunos_raw.set_index('Id').to_dict()['Nome']
+        else:
+            nomes_alunos = Coletor.planilha_KA_raw['Nome do aluno'].unique()
+            for nome_id in nomes_alunos:
+                aluno = nome_id.split('_')
+                nome = aluno[0]
+                id = aluno[1]
+                Coletor.dicionario_alunos[id] = nome
+        # print(Coletor.dicionario_alunos)
 
     @staticmethod
-    def definir_recomendacoes_aluno():
+    def coletar_dados_finais():
         # preenche os espaços vazio com zeros
         Coletor.planilha_KA_raw.fillna(0, inplace=True, axis = 1)
         
@@ -126,12 +137,13 @@ class Coletor:
                 dados_da_recomendacao = recomendacoes_aluno[recomendacoes_aluno['Nome da recomendação'] == recomendacao]
 
                 if dados_da_recomendacao.empty:
-                    print("Dataframe vazio")
-                    return
+                    print("Aluno sem recomendação:", end=' ')
+                    print(id_aluno, Coletor.dicionario_alunos[id_aluno], recomendacao)
+                #    return
 
                 # se o número de tentativas não é zero:
                 pontos_na_recomendacao = 0
-                if dados_da_recomendacao['Número de tentativas'].values[0] != 0:
+                if not dados_da_recomendacao.empty and dados_da_recomendacao['Número de tentativas'].values[0] != 0:
                     # aumente o número de tentativas
                     percentual_tentativas += 1
 
@@ -175,10 +187,14 @@ class Coletor:
             # para cada recomendação desse aluno (índice 3 do vetor):
             for recomendacao in aluno[3]:
                 # atribua os pontos dessa recomendação (índice 0 é o nome e índice 1 é o valor)
-                resultado.at[id, recomendacao[0]] = recomendacao[1]
-        
+                resultado.at[id, recomendacao[0]] = str(round(recomendacao[1],2)).replace('.', ',') 
+
         # salve no destino
-        resultado.to_csv('../csv/teste.csv')
+        caminho_KA = Leitor.caminho_planilha_KA.split('/') 
+        nome_arquivo_resultado = f'Resultado_{caminho_KA[-1]}'
+
+        caminho_destino = Path(Leitor.caminho_diretorio_destino, nome_arquivo_resultado)
+        resultado.to_csv(caminho_destino)
 
         # imprima algo no terminal (TESTE)
         print("cabo")

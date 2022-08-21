@@ -15,7 +15,8 @@ def exibir_janela_principal():
     center_x = int(largura_tela/2 - largura_janela / 2)  # centro da tela no eixo x
     center_y = int(altura_tela/2 - altura_janela / 2)    # centro da tela no eixo y
 
-    janela_principal.geometry(f'{largura_janela}x{altura_janela}+{center_x}+{center_y}') # define posicionamento e tamanho da janela
+    #janela_principal.geometry(f'{largura_janela}x{altura_janela}+{center_x}+{center_y}') # define posicionamento e tamanho da janela
+    janela_principal.geometry('')
 
     exibir_opcoes(janela_principal)  # exibe as opções do menu na janela principal
     
@@ -48,4 +49,4 @@ def criar_opcoes(lista_opcoes, janela_principal):
         botao_selecionar.grid(sticky='e', column=1, row=idx)  # renderiza o botao, alinha à direita (e = east)
         
         ttk.Separator(janela_principal, orient="horizontal").grid(row=idx+1,column=0,
-                                                                  columnspan=4, ipadx=200) # cria um separador 
+                                                                  columnspan=4, ipadx=135) # cria um separador 
