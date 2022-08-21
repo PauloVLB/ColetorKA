@@ -1,29 +1,97 @@
-from distutils.command.clean import clean
-import re
-from unittest import result
+from tkinter import *
+from turtle import right
 from leitor import Leitor
 import pandas as pd
 
 class Coletor:
     #Atributos
     planilha_alunos_raw = None
+    ja_carreguei_planilha_alunos = False
     planilha_KA_raw = None
+    ja_carreguei_planilha_KA = False
 
     dicionario_alunos = None
+
+    todas_recomendacoes = []
+    recomendacoes_selecionadas = []
+
 
     @staticmethod
     def coletar_dados():
         # Carrega planilha de alunos com Nome e Id 
-        Coletor.planilha_alunos_raw = pd.read_csv(Leitor.caminho_planilha_alunos,
-                                                  dtype={'Id':str})
-
+        if len(Leitor.caminho_planilha_alunos) > 2:
+            Coletor.planilha_alunos_raw = pd.read_csv(Leitor.caminho_planilha_alunos,
+                                                    dtype={'Id':str})
+            Coletor.ja_carreguei_planilha_alunos = True
+        else:
+            print("Não selecionou planilha de alunos")
+            return
 
         # Carrega planilha da Khan Academy 
-        Coletor.planilha_KA_raw = pd.read_csv(Leitor.caminho_planilha_KA)
-        
+        if len(Leitor.caminho_planilha_KA) > 2:
+            if(not Coletor.ja_carreguei_planilha_KA):
+                Coletor.planilha_KA_raw = pd.read_csv(Leitor.caminho_planilha_KA)
+                Coletor.todas_recomendacoes = Coletor.planilha_KA_raw['Nome da recomendação'].unique()
+                Coletor.recomendacoes_selecionadas = Coletor.todas_recomendacoes
+                Coletor.ja_carreguei_planilha_KA = True
+        else:
+            print("Não selecionou planilha KA")
+            return
         # Lê os alunos da planilha de alunos
         Coletor.definir_alunos()
         Coletor.definir_recomendacoes_aluno()
+
+    @staticmethod
+    def definir_recomendacoes(janela_recomendacoes, lista_recomendacoes):
+        Coletor.recomendacoes_selecionadas.clear()
+        
+        for selecionada in lista_recomendacoes.curselection():
+            Coletor.recomendacoes_selecionadas.append(lista_recomendacoes.get(selecionada))
+        
+        janela_recomendacoes.destroy()
+
+    @staticmethod
+    def selecionar_recomendacoes():
+        if len(Leitor.caminho_planilha_KA) <= 2:
+            print("Não selecionou planilha KA")
+            return
+
+        Coletor.planilha_KA_raw = pd.read_csv(Leitor.caminho_planilha_KA)
+        Coletor.ja_carreguei_planilha_KA = True
+        Coletor.todas_recomendacoes = Coletor.planilha_KA_raw['Nome da recomendação'].unique()
+
+        janela_recomendacoes = Tk()
+        janela_recomendacoes.title('Seleção de Recomendações')
+        janela_recomendacoes.geometry('450x300')
+
+        selecao = Frame(janela_recomendacoes)
+        barra_rolagem = Scrollbar(selecao, orient=VERTICAL)
+        lista_recomendacoes = Listbox(selecao, selectmode=EXTENDED, yscrollcommand=barra_rolagem.set,
+                                      width="400", height="15")
+
+        barra_rolagem.config(command=lista_recomendacoes.yview)
+
+        selecao.pack()
+        barra_rolagem.pack(side=RIGHT, fill=Y)
+        lista_recomendacoes.pack(expand = True, fill = "both")
+
+        botao_selecionar = Button(janela_recomendacoes,    
+                                  text='Selecionar',
+                                  command= lambda : Coletor.definir_recomendacoes(janela_recomendacoes,
+                                                                                  lista_recomendacoes))
+        botao_selecionar.pack(side=BOTTOM)
+
+        recomendacoes = Coletor.todas_recomendacoes
+        
+        for each_item in range(len(recomendacoes)):
+            lista_recomendacoes.insert(END, recomendacoes[each_item])
+            
+            # coloring alternative lines of listbox
+            lista_recomendacoes.itemconfig(each_item,
+                    bg = "lightgray" if each_item % 2 == 0 else "gray")
+            
+        lista_recomendacoes.mainloop()
+
 
     @staticmethod
     def definir_alunos():
@@ -45,7 +113,7 @@ class Coletor:
             condicao = Coletor.planilha_KA_raw['Nome do aluno'].str.endswith(id_aluno)
             recomendacoes_aluno = Coletor.planilha_KA_raw[condicao]
 
-            num_recomendacoes = recomendacoes_aluno['Nome da recomendação'].unique().size
+            num_recomendacoes = len(Coletor.recomendacoes_selecionadas)
             percentual_tentativas = 0
             desempenho_medio = 0
 
@@ -53,10 +121,14 @@ class Coletor:
 
             recomendacao_infos = []
             # para cada recomendação nas recomendações do aluno...
-            for recomendacao in recomendacoes_aluno['Nome da recomendação'].unique():
+            for recomendacao in Coletor.recomendacoes_selecionadas:
                 # colete os dados daquela recomendação
                 dados_da_recomendacao = recomendacoes_aluno[recomendacoes_aluno['Nome da recomendação'] == recomendacao]
-                
+
+                if dados_da_recomendacao.empty:
+                    print("Dataframe vazio")
+                    return
+
                 # se o número de tentativas não é zero:
                 pontos_na_recomendacao = 0
                 if dados_da_recomendacao['Número de tentativas'].values[0] != 0:
@@ -110,6 +182,7 @@ class Coletor:
 
         # imprima algo no terminal (TESTE)
         print("cabo")
+        #print(resultado[['Nome do aluno', 'Pontuação', 'Porcentagem de Tentativas']])
 
             
 

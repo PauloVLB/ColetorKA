@@ -26,7 +26,7 @@ def exibir_opcoes(janela_principal):
     lista_opcoes = [('Planilha de alunos', 'Selecionar Arquivo', Leitor.selecionar_planilha_alunos), 
                     ('Planilha da Khan Academy', 'Selecionar Arquivo', Leitor.selecionar_planilha_KA),
                     ('Selecionar Pasta Destino', 'Selecionar Pasta', Leitor.selecionar_diretorio_destino),
-                    ('Selecionar Recomendações', 'Selecionar', Leitor.selecionar_recomendacoes),
+                    ('Selecionar Recomendações', 'Selecionar', Coletor.selecionar_recomendacoes),
                     ('Coletar todos os dados', 'Coletar Dados!', Coletor.coletar_dados), 
                     ]  
     

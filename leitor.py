@@ -2,8 +2,10 @@ from tkinter import filedialog
 
 class Leitor:
     # Atributos
-    caminho_planilha_alunos = "/home/paulo/KA_ME/csv/Alunos_teste.csv" # TESTE
-    caminho_planilha_KA = "/home/paulo/KA_ME/csv/ME_2022_1_T09.csv" # TESTE
+    #caminho_planilha_alunos = "/home/paulo/KA_ME/csv/Alunos_teste.csv" # TESTE
+    #caminho_planilha_KA = "/home/paulo/KA_ME/csv/ME_2022_1_T09.csv" # TESTE
+    caminho_planilha_alunos = ""     
+    caminho_planilha_KA = "" 
     caminho_diretorio_destino = ""
 
     @staticmethod
