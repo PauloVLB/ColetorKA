@@ -196,8 +196,10 @@ class Coletor:
         caminho_destino = Path(Leitor.caminho_diretorio_destino, nome_arquivo_resultado)
         resultado.to_csv(caminho_destino)
 
+        Coletor.mostrar_mensagem('Dados coletados com sucesso!')
+        exit()
         # imprima algo no terminal (TESTE)
-        print("cabo")
+        # print("cabo")
         #print(resultado[['Nome do aluno', 'Pontuação', 'Porcentagem de Tentativas']])
 
             
