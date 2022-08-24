@@ -1,8 +1,8 @@
 from tkinter import Listbox, Scrollbar, Frame, messagebox, Tk, Button
-from turtle import right
 from leitor import Leitor
 from pathlib import Path
 import pandas as pd
+import sys
 
 class Coletor:
     #Atributos
@@ -23,16 +23,14 @@ class Coletor:
             Coletor.planilha_alunos_raw = pd.read_csv(Leitor.caminho_planilha_alunos,
                                                     dtype={'Id':str})
             Coletor.ja_carreguei_planilha_alunos = True
-        #else:
-        #    print("Não selecionou planilha de alunos")
-        #    return
 
         # Carrega planilha da Khan Academy 
         if len(Leitor.caminho_planilha_KA) > 2:
+            if(len(Coletor.recomendacoes_selecionadas) == 0): 
+                Coletor.recomendacoes_selecionadas = Coletor.todas_recomendacoes
             if(not Coletor.ja_carreguei_planilha_KA):
                 Coletor.planilha_KA_raw = pd.read_csv(Leitor.caminho_planilha_KA)
                 Coletor.todas_recomendacoes = Coletor.planilha_KA_raw['Nome da recomendação'].unique()
-                Coletor.recomendacoes_selecionadas = Coletor.todas_recomendacoes
                 Coletor.ja_carreguei_planilha_KA = True
         else:
             Coletor.mostrar_mensagem("Você precisa selecionar a planilha da Khan Academy antes")
@@ -43,11 +41,15 @@ class Coletor:
 
     @staticmethod
     def definir_recomendacoes(janela_recomendacoes, lista_recomendacoes):
-        Coletor.recomendacoes_selecionadas.clear()
+        novas_recomendacoes_selecionadas = []
         
         for selecionada in lista_recomendacoes.curselection():
-            Coletor.recomendacoes_selecionadas.append(lista_recomendacoes.get(selecionada))
+            novas_recomendacoes_selecionadas.append(lista_recomendacoes.get(selecionada))
         
+        if(len(novas_recomendacoes_selecionadas) > 0):
+            Coletor.recomendacoes_selecionadas = novas_recomendacoes_selecionadas
+            # print("teve selecionada")
+
         janela_recomendacoes.destroy()
 
     @staticmethod 
@@ -56,6 +58,8 @@ class Coletor:
 
     @staticmethod
     def selecionar_recomendacoes():
+        # print("selecionar_recomendacoes", len(Coletor.recomendacoes_selecionadas), Coletor.recomendacoes_selecionadas)
+
         if len(Leitor.caminho_planilha_KA) <= 2:
             Coletor.mostrar_mensagem("Você precisa selecionar a planilha da Khan Academy antes")
             return
@@ -96,7 +100,6 @@ class Coletor:
             
         lista_recomendacoes.mainloop()
 
-
     @staticmethod
     def definir_alunos():
         # Cria dicionário que mapeia id -> nome do aluno
@@ -117,6 +120,8 @@ class Coletor:
         Coletor.planilha_KA_raw.fillna(0, inplace=True, axis = 1)
         
         alunos = []
+        
+        # print("coletar_dados_final", len(Coletor.recomendacoes_selecionadas), Coletor.recomendacoes_selecionadas)
 
         # para cada aluno na planilha de alunos...
         for id_aluno in Coletor.dicionario_alunos:
@@ -197,7 +202,7 @@ class Coletor:
         resultado.to_csv(caminho_destino)
 
         Coletor.mostrar_mensagem('Dados coletados com sucesso!')
-        exit()
+        sys.exit(0)
         # imprima algo no terminal (TESTE)
         # print("cabo")
         #print(resultado[['Nome do aluno', 'Pontuação', 'Porcentagem de Tentativas']])
