@@ -156,7 +156,7 @@ class Coletor:
 
                     pontos_na_recomendacao = 0
                     if(dados_da_recomendacao['Pontos possíveis'].values[0] != 0):
-                        pontos_na_recomendacao = (dados_da_recomendacao['Pontuação na data final'].values[0] 
+                        pontos_na_recomendacao = (dados_da_recomendacao['Pontuação na data limite'].values[0] 
                                                 /
                                                 dados_da_recomendacao['Pontos possíveis'].values[0])*100
                     
